@@ -36,17 +36,26 @@ if [[ -n "$(ls -A frontend 2>/dev/null)" ]]; then
     exit 1
 fi
 
+set_env() {
+    local file="$1"
+    local key="$2"
+    local value="$3"
+
+    if grep -qE "^[# ]*${key}=" "$file"; then
+        sed -i.bak -E "s|^[# ]*${key}=.*|${key}=${value}|" "$file"
+        rm -f "${file}.bak"
+    else
+        echo "${key}=${value}" >> "$file"
+    fi
+}
+
 echo "Initializing project: $PROJECT_NAME"
 
 cp .env.example .env
 
-sed -i.bak \
-    -e "s/^PROJECT_NAME=.*/PROJECT_NAME=$PROJECT_NAME/" \
-    -e "s/^POSTGRES_DB=.*/POSTGRES_DB=$PROJECT_NAME/" \
-    -e "s/^POSTGRES_USER=.*/POSTGRES_USER=$PROJECT_NAME/" \
-    .env
-
-rm -f .env.bak
+set_env .env PROJECT_NAME "$PROJECT_NAME"
+set_env .env POSTGRES_DB "$PROJECT_NAME"
+set_env .env POSTGRES_USER "$PROJECT_NAME"
 
 echo "Building Docker images..."
 docker compose build
@@ -56,26 +65,27 @@ docker compose run --rm php \
     composer create-project laravel/laravel .
 
 echo "Creating React frontend..."
-docker compose run --rm node \
+docker run --rm \
+    -v "$(pwd)/frontend:/app" \
+    -w /app \
+    node:22-alpine \
     npm create vite@latest . -- --template react
 
 echo "Installing frontend dependencies..."
-docker compose run --rm node npm install
+docker run --rm \
+    -v "$(pwd)/frontend:/app" \
+    -w /app \
+    node:22-alpine \
+    npm install
 
 echo "Configuring Laravel..."
 
-cp backend/.env.example backend/.env
-
-sed -i.bak \
-    -e 's/^DB_CONNECTION=.*/DB_CONNECTION=pgsql/' \
-    -e 's/^# DB_HOST=.*/DB_HOST=postgres/' \
-    -e 's/^# DB_PORT=.*/DB_PORT=5432/' \
-    -e "s/^# DB_DATABASE=.*/DB_DATABASE=$PROJECT_NAME/" \
-    -e "s/^# DB_USERNAME=.*/DB_USERNAME=$PROJECT_NAME/" \
-    -e 's/^# DB_PASSWORD=.*/DB_PASSWORD=secret/' \
-    backend/.env
-
-rm -f backend/.env.bak
+set_env backend/.env DB_CONNECTION pgsql
+set_env backend/.env DB_HOST postgres
+set_env backend/.env DB_PORT 5432
+set_env backend/.env DB_DATABASE "$PROJECT_NAME"
+set_env backend/.env DB_USERNAME "$PROJECT_NAME"
+set_env backend/.env DB_PASSWORD secret
 
 echo "Starting containers..."
 docker compose up -d
