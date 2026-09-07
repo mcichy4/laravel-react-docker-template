@@ -49,6 +49,9 @@ set_env() {
     fi
 }
 
+readonly USER_ID="$(id -u)"
+readonly GROUP_ID="$(id -g)"
+
 echo "Initializing project: $PROJECT_NAME"
 
 cp .env.example .env
