@@ -57,6 +57,9 @@ set_env .env PROJECT_NAME "$PROJECT_NAME"
 set_env .env POSTGRES_DB "$PROJECT_NAME"
 set_env .env POSTGRES_USER "$PROJECT_NAME"
 
+set_env .env USER_ID "$USER_ID"
+set_env .env GROUP_ID "$GROUP_ID"
+
 echo "Building Docker images..."
 docker compose build
 
@@ -66,6 +69,7 @@ docker compose run --rm php \
 
 echo "Creating React frontend..."
 docker run --rm \
+    --user "$(id -u):$(id -g)" \
     -v "$(pwd)/frontend:/app" \
     -w /app \
     node:22-alpine \
@@ -73,6 +77,7 @@ docker run --rm \
 
 echo "Installing frontend dependencies..."
 docker run --rm \
+    --user "$(id -u):$(id -g)" \
     -v "$(pwd)/frontend:/app" \
     -w /app \
     node:22-alpine \

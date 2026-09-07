@@ -4,6 +4,9 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
+      args:
+        USER_ID: ${USER_ID}
+        GROUP_ID: ${GROUP_ID}
     working_dir: /var/www/backend
     volumes:
       - ./backend:/var/www/backend
@@ -33,6 +36,7 @@ services:
 
   node:
     image: node:22-alpine
+    user: "${USER_ID}:${GROUP_ID}"
     working_dir: /var/www/frontend
     volumes:
       - ./frontend:/var/www/frontend
