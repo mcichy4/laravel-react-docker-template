@@ -24,6 +24,8 @@ if [[ -f .env ]]; then
     exit 1
 fi
 
+mkdir -p backend frontend
+
 if [[ -n "$(ls -A backend 2>/dev/null)" ]]; then
     echo "backend directory is not empty."
     exit 1
