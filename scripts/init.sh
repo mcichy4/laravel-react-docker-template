@@ -68,11 +68,15 @@ docker compose build
 
 echo "Creating Laravel backend..."
 docker compose run --rm php \
-    composer create-project laravel/laravel .
+    composer create-project --no-scripts laravel/laravel .
+
+echo "Configuring Laravel backend..."
+cp backend/.env.example backend/.env
 
 echo "Creating React frontend..."
 docker run --rm \
     --user "$(id -u):$(id -g)" \
+    -e HOME=/tmp \
     -v "$(pwd)/frontend:/app" \
     -w /app \
     node:22-alpine \
@@ -81,6 +85,7 @@ docker run --rm \
 echo "Installing frontend dependencies..."
 docker run --rm \
     --user "$(id -u):$(id -g)" \
+    -e HOME=/tmp \
     -v "$(pwd)/frontend:/app" \
     -w /app \
     node:22-alpine \
