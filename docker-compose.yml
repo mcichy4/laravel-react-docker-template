@@ -38,7 +38,7 @@ services:
     image: node:22-alpine
     user: "${USER_ID}:${GROUP_ID}"
     environment:
-      - HOME: /tmp
+      HOME: /tmp
     working_dir: /var/www/frontend
     volumes:
       - ./frontend:/var/www/frontend
